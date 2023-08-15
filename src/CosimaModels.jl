@@ -1,5 +1,6 @@
 module CosimaModels
     using Cosima
+    using LinearAlgebra
 
     export create_system
 
