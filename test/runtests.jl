@@ -1,6 +1,7 @@
 using CosimaModels
+using Cosima
 using Test
 
 @testset "CosimaModels.jl" begin
-    # Write your tests here.
+    include("models/npendulum_test.jl")
 end

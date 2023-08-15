@@ -1,5 +1,8 @@
 module CosimaModels
+    using Cosima
 
-# Write your package code here.
+    export create_system
 
+    include("models/npendulum.jl")
+    export NPendulum
 end
