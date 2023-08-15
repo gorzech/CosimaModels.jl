@@ -12,7 +12,19 @@ end
     @test p.length == 1
 end
 
-@testset "Default NPendulum system" begin
+@testset "Default NPendulum system create" begin
     p = NPendulum()
     mbs = @test_nowarn create_system(p)
+end
+
+@testset "Default NPendulum system check" begin
+    p = NPendulum()
+    mbs = create_system(p)
+    @test mbs.nq == 14
+    @test mbs.nh == 12
+    @test mbs.ny == 26
+    @test mbs.nconstr == 11
+    @test length(mbs.bodies.r_bodies) == 2
+    @test length(mbs.joints) == 4
+    @test length(mbs.forces) == 2
 end
