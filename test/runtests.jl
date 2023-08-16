@@ -1,5 +1,6 @@
 using CosimaModels
 using Cosima
+using LinearAlgebra
 using Test
 
 @testset "CosimaModels.jl" begin
