@@ -12,11 +12,13 @@ SpatialSliderCrank() = SpatialSliderCrank([0.0, 0.1, 0.16, 1.0, 0.0, 0.0, 0.0],
 
 function create_system(p::SpatialSliderCrank)
     # %% Joints
+    v_OA = SA[0.0, 0.1, 0.12]
+    v_AB = SA[0.0, 0.0, 0.08]
     # 1 - revolute ground-crank (0-1)
-    j_loc_1 = sv.v_OA
+    j_loc_1 = v_OA
     j_axis_1 = SA[1.0, 0.0, 0.0]
     # 2 - spherical crank - connecting rod at B (1-2)
-    j_loc_2 = sv.v_OA + sv.v_AB
+    j_loc_2 = v_OA + v_AB
     # 3 - revolute rod - cylinder (2-3)
     j_loc_3 = p.q_cylinder[1:3]
     j_axis_3 = p.q_rod[5:end]  # this is an axis of rotation of body 2
@@ -39,7 +41,7 @@ function create_system(p::SpatialSliderCrank)
     m_rod = rod_density * rod_V
     Ic_rod =
         1 / 12 * m_rod .* (rod_side_len^2 .+ [rod_side_len^2, rod_length^2, rod_length^2])
-    rod = RBody!(bodies, m_rod, Ic_rod, p.q_rod)
+    rod = RBody!(b, m_rod, Ic_rod, p.q_rod)
 
     joints = [
         # # 1 - revolute ground-crank (0-1)
@@ -50,8 +52,8 @@ function create_system(p::SpatialSliderCrank)
         JointPoint(crank, rod, j_loc_2),
         # # 3 - revolute rod - slider (2-3)
         JointPoint(rod, slider, j_loc_3),
-        JointPerpend1(rod, slider, [1.0, 0.0, 0.0], j_axis_3, j_loc_3),
-        JointPerpend1(rod, slider, cross([1.0, 0.0, 0.0], j_axis_3), j_axis_3, j_loc_3),
+        JointPerpend1(rod, slider, [1.0, 0.0, 0.0], j_axis_3),
+        JointPerpend1(rod, slider, cross([1.0, 0.0, 0.0], j_axis_3), j_axis_3),
         # # 5 - cylindrical slider ground
         JointSimple(slider, [2, 3], false), # false - do not fix rotation only y and z
         JointPerpend1(slider, ground, [0.0, 1.0, 0.0], j_axis_4),
