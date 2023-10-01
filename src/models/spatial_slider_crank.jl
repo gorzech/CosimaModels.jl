@@ -27,11 +27,11 @@ function create_system(p::SpatialSliderCrank)
     j_axis_4 = j_axis_1
     # 5 - translational slider ground
     # modeled as simple joint except of x coordinate (that is body rotation and translation in y and z are restrickted)
-
-    b = Bodies()
-    ground = RBody!(b, 1.0, ones(3))
-    crank = RBody!(b, 0.12, [1e-4, 1e-5, 1e-4], p.q_crank)
-    slider = RBody!(b, 2.0, [1e-4, 1e-4, 1e-4], p.q_slider)
+    grav_z = -9.81
+    sys = Mbs(gv=SA[0.0, 0.0, grav_z], baumg_params=(30.0, 30.0))
+    ground = RBody!(sys, 1.0, ones(3))
+    crank = RBody!(sys, 0.12, [1e-4, 1e-5, 1e-4], p.q_crank)
+    slider = RBody!(sys, 2.0, [1e-4, 1e-4, 1e-4], p.q_slider)
 
     rod_length = 0.3
     rod_side_len = 0.01
@@ -41,29 +41,23 @@ function create_system(p::SpatialSliderCrank)
     m_rod = rod_density * rod_V
     Ic_rod =
         1 / 12 * m_rod .* (rod_side_len^2 .+ [rod_side_len^2, rod_length^2, rod_length^2])
-    rod = RBody!(b, m_rod, Ic_rod, p.q_rod)
+    rod = RBody!(sys, m_rod, Ic_rod, p.q_rod)
 
-    joints = [
-        # # 1 - revolute ground-crank (0-1)
-        JointPoint(ground, crank, j_loc_1),
-        JointPerpend1(ground, crank, [0.0, 1.0, 0.0], j_axis_1),
-        JointPerpend1(ground, crank, [0.0, 0.0, 1.0], j_axis_1),
-        # # 2 - spherical crank - connecting rod at B (1-2)
-        JointPoint(crank, rod, j_loc_2),
-        # # 3 - revolute rod - slider (2-3)
-        JointPoint(rod, slider, j_loc_3),
-        JointPerpend1(rod, slider, [1.0, 0.0, 0.0], j_axis_3),
-        JointPerpend1(rod, slider, cross([1.0, 0.0, 0.0], j_axis_3), j_axis_3),
-        # # 5 - cylindrical slider ground
-        JointSimple(slider, [2, 3], false), # false - do not fix rotation only y and z
-        JointPerpend1(slider, ground, [0.0, 1.0, 0.0], j_axis_4),
-        JointPerpend1(slider, ground, [0.0, 0.0, 1.0], j_axis_4),
-        JointSimple(ground),
-    ]
+    # # 1 - revolute ground-crank (0-1)
+    JointPoint!(sys, ground, crank, j_loc_1)
+    JointPerpend1!(sys, ground, crank, [0.0, 1.0, 0.0], j_axis_1)
+    JointPerpend1!(sys, ground, crank, [0.0, 0.0, 1.0], j_axis_1)
+    # # 2 - spherical crank - connecting rod at B (1-2)
+    JointPoint!(sys, crank, rod, j_loc_2)
+    # # 3 - revolute rod - slider (2-3)
+    JointPoint!(sys, rod, slider, j_loc_3)
+    JointPerpend1!(sys, rod, slider, [1.0, 0.0, 0.0], j_axis_3)
+    JointPerpend1!(sys, rod, slider, cross([1.0, 0.0, 0.0], j_axis_3), j_axis_3)
+    # # 5 - cylindrical slider ground
+    JointSimple!(sys, slider, [2, 3], false) # false - do not fix rotation only y and z
+    JointPerpend1!(sys, slider, ground, [0.0, 1.0, 0.0], j_axis_4)
+    JointPerpend1!(sys, slider, ground, [0.0, 0.0, 1.0], j_axis_4)
+    JointSimple!(sys, ground)
 
-    grav_z = -9.81
-
-    forces = Force[]
-
-    return Mbs(b, joints, forces, gv=SA[0.0, 0.0, grav_z], baumg_params=(30.0, 30.0))
+    return sys
 end
